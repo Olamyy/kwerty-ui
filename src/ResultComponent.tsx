@@ -1,32 +1,11 @@
 import React from "react";
 import {Metrics, ResultEntity} from "./types";
-import Highlighter, {FindChunks} from "react-highlight-words";
-import _, {chunk} from "lodash";
+import _ from "lodash";
 import CustomizedDialogs from "./InfoDialog";
-import Typography from "@mui/material/Typography";
 
 type Props = {
     text: string;
     metrics: Metrics
-}
-
-type HighlightProps = {
-    children: React.ReactNode,
-    highlightIndex: number,
-    valid: ResultEntity[][];
-    notValid: ResultEntity[][]
-}
-
-
-function getWordIndices(text: string, word: string): [number, number] {
-    const startIndex = text.indexOf(word);
-    if (startIndex === -1) {
-        // word not found in text
-        return [-1, -1];
-    }
-
-    const endIndex = startIndex + word.length - 1;
-    return [startIndex, endIndex];
 }
 
 export function ResultComponent({ text, metrics }: Props) {
