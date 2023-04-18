@@ -12,7 +12,6 @@ import SimpleAccordion from "./Samples";
 import Button from "@mui/material/Button";
 import {Metrics} from "./types";
 
-
 export interface APIResponse {
     metrics: APIResponseResult[];
 }
@@ -38,7 +37,12 @@ export interface APIResponseResult {
     }[]
 }
 
+const KWERTY_API = process.env.REACT_APP_KWERTY_API
 
+console.log(KWERTY_API)
+
+
+console.log(process.env)
 
 function KwertyUI() {
     const [inputText, setInputText] = useState('');
@@ -51,7 +55,7 @@ function KwertyUI() {
     const handleClick = async () => {
         setIsLoading(true)
         try {
-            const response = await fetch("http://localhost:8000/evaluate", {
+            const response = await fetch(`${KWERTY_API}/evaluate`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": 'application/json',
