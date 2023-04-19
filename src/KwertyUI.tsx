@@ -48,6 +48,7 @@ function KwertyUI() {
     const [inputText, setInputText] = useState('');
     const [data, setData] = useState<Metrics>({metrics: []});
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(false);
 
     const handleButtonClick = (sentence: string) => {
         setInputText(sentence)
@@ -67,6 +68,10 @@ function KwertyUI() {
                 )
             });
 
+            if (!response.ok) {
+                setError(true);
+            }
+
             const result = await response.json();
             setData(result);
         } finally {
@@ -77,6 +82,8 @@ function KwertyUI() {
     const handleChange = (sentence: string) => {
         setInputText(sentence);
     }
+
+    console.log(error)
 
 
     return (
@@ -122,12 +129,13 @@ function KwertyUI() {
                     <Card>
                         <CardContent>
                             {
+                                error ? (<Typography color="red">Something went wrong while calling the OpenAI API</Typography>) :
                                 isLoading && data.metrics.length === 0 ? (
-                                        <Box sx={{ display: 'flex' }}>
+                                         <Box sx={{ display: 'flex' }}>
                                             <CircularProgress />
                                         </Box>
-                                        ) : (
-                                            data.metrics.length > 0 ? (<ResultComponent text={inputText} metrics={data}/>) : (<Typography>Result will be shown here</Typography>)
+                                ) : (
+                                    data.metrics.length > 0 ? (<ResultComponent text={inputText} metrics={data}/>) : (<Typography>Result will be shown here</Typography>)
                                 )
                             }
                         </CardContent>
