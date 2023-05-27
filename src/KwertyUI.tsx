@@ -1,149 +1,211 @@
-import React, {useState} from 'react';
-import './App.css';
-import {Box, Card, CardContent, CircularProgress, Grid} from "@mui/material";
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import FormControl from '@mui/joy/FormControl';
-import Textarea from '@mui/joy/Textarea';
-import {Send} from "@mui/icons-material";
-import {ResultComponent} from "./ResultComponent";
+import React, { useState } from "react";
+import "./App.css";
+import { Box, Button, Grid, List, ListItem, Paper } from "@mui/material";
 import SimpleAccordion from "./Samples";
-import Button from "@mui/material/Button";
-import {Metrics} from "./types";
+import ResponsiveAppBar from "./ResponsiveAppBar";
+import Container from "@mui/material/Container";
+import { KwertyValidation, Match } from "./types";
+import { MatchResult } from "./MatchResult";
+import Typography from "@mui/material/Typography";
+import { CircularProgress } from "@mui/joy";
+import RenderWord from "./RenderWord";
 
-export interface APIResponse {
-    metrics: APIResponseResult[];
-}
+// const KWERTY_API = process.env.REACT_APP_KWERTY_API || "localhost:3500/kwerty"
+const KWERTY_API = "http://54.172.173.121:3500";
 
-export interface Validity {
-    threshold: number;
-    is_valid: boolean
-}
-
-export interface ExtractedInformation {
-    metric: string;
-    year: string;
-    month: string;
-    value: string;
-}
-
-export interface APIResponseResult {
-    country: string,
-    result: {
-        summary: string;
-        extracted_information: ExtractedInformation;
-        validity: Validity
-    }[]
-}
-
-const KWERTY_API = process.env.REACT_APP_KWERTY_API
-
-console.log(KWERTY_API)
-
-
-console.log(process.env)
-
+let sampleData: KwertyValidation = { error: null, metric_match: null };
 function KwertyUI() {
-    const [inputText, setInputText] = useState('');
-    const [data, setData] = useState<Metrics>({metrics: []});
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(false);
+  const [inputText, setInputText] = useState("");
+  const [data, setData] = useState<KwertyValidation>(sampleData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [expanded, setExpanded] = React.useState(false);
 
-    const handleButtonClick = (sentence: string) => {
-        setInputText(sentence)
+  const handleButtonClick = (sentence: string) => {
+    setData(sampleData);
+    setError(false);
+    setInputText(sentence);
+  };
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${KWERTY_API}/kwerty/evaluate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: inputText,
+        }),
+      });
+
+      if (!response.ok) {
+        setError(true);
+      }
+
+      const result = await response.json();
+      console.log(result);
+      setData(result);
+    } finally {
+      setIsLoading(false);
     }
-    const handleClick = async () => {
-        setIsLoading(true)
-        try {
-            const response = await fetch(`${KWERTY_API}/evaluate`, {
-                method: 'POST',
-                headers: {
-                    "Content-Type": 'application/json',
-                },
-                body: JSON.stringify(
-                    {
-                        text: inputText
-                    }
-                )
-            });
+  };
 
-            if (!response.ok) {
-                setError(true);
-            }
+  const handleTextChange = (event: any) => {
+    const input = event.target as HTMLElement;
+    setInputText(input.innerText);
+  };
 
-            const result = await response.json();
-            setData(result);
-        } finally {
-            setIsLoading(false);
-        }
+  const updateInputText = (updatedText: string) => {
+    setInputText(updatedText);
+  };
+
+  const handleMatchChange =
+    (panel: any) => (event: any, isExpanded: boolean) => {
+      setExpanded(isExpanded ? panel : false);
     };
 
-    const handleChange = (sentence: string) => {
-        setInputText(sentence);
-    }
+  const processInputText = (
+    inputText: string,
+    matches: Match[] | undefined
+  ) => {
+    let output: Array<string | JSX.Element> = [];
 
-    console.log(error)
+    inputText.split(" ").forEach((word) => {
+      if (!matches) {
+        output.push(word);
+      } else {
+        let foundMatch = false;
 
+        matches.forEach((match) => {
+          if (word === match.openai_extract.metric_value) {
+            output.push(<RenderWord match={match} validity={match.validity} />);
+            foundMatch = true; // Set the flag to true
+          }
+        });
 
-    return (
-        <Box sx={{flexGrow: 1}} className="App">
-            <AppBar position="static">
-                <Toolbar>
-                    <Typography variant="h6" component="div" sx={{flexGrow: 1}}>
-                        KwertyAI
-                    </Typography>
-                </Toolbar>
-            </AppBar>
-            <Grid container padding={10}>
-                <Grid item xs={5.5} >
-                    <>
-                    <FormControl>
-                        <Textarea
-                            placeholder="Type something here…"
-                            minRows={20}
-                            value={inputText}
-                            onChange={ev => handleChange(ev.target.value)}
-                            endDecorator={
-                                <Box sx={{
-                                    display: 'flex',
-                                    gap: 'var(--Textarea-paddingBlock)',
-                                    pt: 'var(--Textarea-paddingBlock)',
-                                    borderTop: '1px solid',
-                                    borderColor: 'divider',
-                                    flex: 'auto',
-                                }}>
-                                    <Button sx={{ml: 'auto'}}
-                                            onClick={handleClick}
-                                            disabled={!inputText.length}
-                                            startIcon={<Send/>}>Validate</Button>
-                                </Box>
-                            }
+        if (!foundMatch) {
+          output.push(word);
+        }
+      }
+    });
+
+    return output;
+  };
+
+  if (data.metric_match?.matches) {
+    console.log(processInputText(inputText, data.metric_match.matches));
+  }
+
+  return (
+    <Container>
+      <ResponsiveAppBar />
+      <Grid container spacing={2} paddingTop={4}>
+        <Grid item lg={7} sm={12}>
+          <div
+            contentEditable
+            style={{
+              height: "100%",
+              maxHeight: "340px",
+              minHeight: "340px",
+              border: "1px solid #ccc",
+              padding: "10px",
+              fontSize: "1.4rem",
+            }}
+            onInput={(e) => {
+              handleTextChange(e);
+            }}
+          >
+            {processInputText(inputText, data.metric_match?.matches).map(
+              (word) => {
+                return <>{word} </>;
+              }
+            )}
+          </div>
+          <SimpleAccordion handleClick={handleButtonClick} />
+        </Grid>
+
+        {isLoading && !data.metric_match ? (
+          <Box sx={{ display: "flex" }}>
+            <CircularProgress />
+          </Box>
+        ) : data.metric_match ? (
+          <Grid item lg={5} sm={12}>
+            <Paper elevation={3}>
+              <Box
+                sx={{
+                  bgcolor: "background.paper",
+                  maxHeight: 360,
+                  minHeight: 360,
+                  overflow: "auto",
+                  scrollBehavior: "smooth",
+                  "&::-webkit-scrollbar": {
+                    display: "none",
+                  },
+                }}
+                className="error-list"
+              >
+                <nav aria-label="main mailbox folders">
+                  {/* create a list of errors with max shown errors 5 */}
+                  <List>
+                    {data.metric_match!.matches.map((match, index) => (
+                      <ListItem disablePadding key={index}>
+                        <MatchResult
+                          match={match}
+                          text={inputText}
+                          index={index}
+                          handleMatchChange={handleMatchChange}
+                          updateInputText={updateInputText}
                         />
-                    </FormControl>
-                    <SimpleAccordion handleClick={handleButtonClick}/>
-                    </>
-                </Grid>
-                <Grid item xs={0.5}></Grid>
-                <Grid item xs={6}>
-                    <Card>
-                        <CardContent>
-                            {
-                                error ? (<Typography color="red">Something went wrong while calling the OpenAI API</Typography>) :
-                                isLoading && data.metrics.length === 0 ? (
-                                         <Box sx={{ display: 'flex' }}>
-                                            <CircularProgress />
-                                        </Box>
-                                ) : (
-                                    data.metrics.length > 0 ? (<ResultComponent text={inputText} metrics={data}/>) : (<Typography>Result will be shown here</Typography>)
-                                )
-                            }
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
-        </Box>
-    );
+                      </ListItem>
+                    ))}
+                  </List>
+                </nav>
+              </Box>
+            </Paper>
+          </Grid>
+        ) : (
+          <Grid item lg={5} sm={12}>
+            <Paper elevation={3}>
+              <Box
+                sx={{
+                  bgcolor: "background.paper",
+                  maxHeight: 360,
+                  minHeight: 360,
+                  overflow: "auto",
+                  scrollBehavior: "smooth",
+                  "&::-webkit-scrollbar": {
+                    display: "none",
+                  },
+                }}
+                className="error-list"
+              >
+                <nav aria-label="main mailbox folders">
+                  <List>
+                    <ListItem>
+                      {error ? (
+                        <Typography color="red">
+                          Something went wrong while calling the OpenAI API
+                        </Typography>
+                      ) : (
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={handleSubmit}
+                        >
+                          Fact Check
+                        </Button>
+                      )}
+                    </ListItem>
+                  </List>
+                </nav>
+              </Box>
+            </Paper>
+          </Grid>
+        )}
+      </Grid>
+    </Container>
+  );
 }
 
 export default KwertyUI;

@@ -1,35 +1,51 @@
-export interface Metrics {
-    metrics: (MetricsEntity)[];
+export interface KwertyValidation {
+  metric_match: MetricMatch | null;
+  error: null;
 }
-export interface MetricsEntity {
-    country: string;
-    result: (ResultEntity)[];
+
+export interface MetricMatch {
+  matches: Match[];
 }
-export interface ResultEntity {
-    summary: string;
-    openai_extract: OpenaiExtract;
-    pandas_extract: PandasExtract;
-    is_valid: boolean;
+
+interface KwertyExtract {
+  country: string;
+  indicator: string;
+  source: string;
+  link?: null;
+  currency_code?: null | string;
+  unit: string;
+  category: string;
+  frequency: string;
+  note?: null;
+  tag?: null;
+  country_code: string;
+  indicator_definition?: null | string;
+  value: string | null;
 }
+
+export interface Validity {
+  is_valid: boolean;
+  invalidity_reason: string;
+}
+
+export interface Match {
+  value: OpenaiExtract;
+  position: Position;
+  message: string;
+  openai_extract: OpenaiExtract;
+  kwerty_validation: KwertyExtract;
+  validity: Validity;
+}
+
 export interface OpenaiExtract {
-    metric: string;
-    month: string;
-    source: string;
-    value: number;
-    year: number;
+  metric_year: number;
+  metric_name: string;
+  metric_month: string;
+  metric_value: string;
+  metric_source: string;
 }
-export interface PandasExtract {
-    country: string;
-    Indicator: string;
-    Source: string;
-    Link?: null;
-    CurrencyCode?: null|string;
-    Unit: string;
-    Category: string;
-    Frequency: string;
-    Note?: null;
-    Tag?: null;
-    CountryCode: string;
-    IndicatorDefinition?: null|string;
-    value: string;
+
+export interface Position {
+  offset: number;
+  length: number;
 }
