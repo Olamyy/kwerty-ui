@@ -1,0 +1,2 @@
+deploy:
+	docker build -t kwerty-ui . && aws ecr get-login-password  --region us-east-1 | docker login --username AWS --password-stdin 992873260398.dkr.ecr.us-east-1.amazonaws.com && docker tag kwerty-ui:latest 992873260398.dkr.ecr.us-east-1.amazonaws.com/kwerty-ui && docker push 992873260398.dkr.ecr.us-east-1.amazonaws.com/kwerty-ui

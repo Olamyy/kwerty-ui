@@ -29,7 +29,6 @@ export interface Validity {
 }
 
 export interface Match {
-  value: OpenaiExtract;
   position: Position;
   message: string;
   openai_extract: OpenaiExtract;

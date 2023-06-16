@@ -109,7 +109,7 @@ export function MatchResult({
           sx={{ margin: 1 }}
           variant="contained"
           color="primary"
-          href={match.kwerty_validation.source}
+          href={match.kwerty_validation ? match.kwerty_validation.source: "#"}
         >
           Go to source
         </Button>

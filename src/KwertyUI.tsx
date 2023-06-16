@@ -7,10 +7,10 @@ import Container from "@mui/material/Container";
 import { KwertyValidation, Match } from "./types";
 import { MatchResult } from "./MatchResult";
 import Typography from "@mui/material/Typography";
-import { CircularProgress } from "@mui/joy";
+import {CircularProgress, Textarea} from "@mui/joy";
 import RenderWord from "./RenderWord";
 
-// const KWERTY_API = process.env.REACT_APP_KWERTY_API || "localhost:3500/kwerty"
+// const KWERTY_API = process.env.REACT_APP_KWERTY_API || "http://localhost:3500"
 const KWERTY_API = "http://54.172.173.121:3500";
 
 let sampleData: KwertyValidation = { error: null, metric_match: null };
@@ -19,6 +19,7 @@ function KwertyUI() {
   const [data, setData] = useState<KwertyValidation>(sampleData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] =  useState('')
   const [expanded, setExpanded] = React.useState(false);
 
   const handleButtonClick = (sentence: string) => {
@@ -44,16 +45,22 @@ function KwertyUI() {
       }
 
       const result = await response.json();
-      console.log(result);
-      setData(result);
+      if (result.error) {
+        setErrorMessage(result.error)
+      }
+      else{
+        setData(result);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleTextChange = (event: any) => {
-    const input = event.target as HTMLElement;
-    setInputText(input.innerText);
+    setError(false);
+    setData(sampleData)
+    // const input = event.target as HTMLElement;
+    setInputText(event.target.value);
   };
 
   const updateInputText = (updatedText: string) => {
@@ -93,35 +100,28 @@ function KwertyUI() {
     return output;
   };
 
-  if (data.metric_match?.matches) {
-    console.log(processInputText(inputText, data.metric_match.matches));
-  }
+  console.log(data.metric_match)
 
   return (
     <Container>
       <ResponsiveAppBar />
       <Grid container spacing={2} paddingTop={4}>
-        <Grid item lg={7} sm={12}>
-          <div
-            contentEditable
-            style={{
-              height: "100%",
-              maxHeight: "340px",
-              minHeight: "340px",
-              border: "1px solid #ccc",
-              padding: "10px",
-              fontSize: "1.4rem",
-            }}
-            onInput={(e) => {
-              handleTextChange(e);
-            }}
-          >
-            {processInputText(inputText, data.metric_match?.matches).map(
-              (word) => {
-                return <>{word} </>;
-              }
-            )}
-          </div>
+        <Grid item lg={6} sm={12}>
+            <Textarea
+                style={{
+                  height: "100%",
+                  maxHeight: "340px",
+                  minHeight: "340px",
+                  border: "1px solid #ccc",
+                  padding: "10px",
+                  fontSize: "1.4rem",
+                }}
+                value={inputText}
+                onChange={(e) => {
+                  handleTextChange(e);
+                }}
+            >
+            </Textarea>
           <SimpleAccordion handleClick={handleButtonClick} />
         </Grid>
 
@@ -130,7 +130,7 @@ function KwertyUI() {
             <CircularProgress />
           </Box>
         ) : data.metric_match ? (
-          <Grid item lg={5} sm={12}>
+          <Grid item lg={6} sm={3}>
             <Paper elevation={3}>
               <Box
                 sx={{
@@ -145,6 +145,20 @@ function KwertyUI() {
                 }}
                 className="error-list"
               >
+              <div>
+                <Grid style={{
+                  height: "100%",
+                  border: "1px solid #ccc",
+                  padding: "10px",
+                  fontSize: "1.0rem",
+                }}>
+                  {processInputText(inputText, data.metric_match?.matches).map(
+                      (word) => {
+                        return <>{word} </>;
+                      }
+                  )}
+                </Grid>
+              </div>
                 <nav aria-label="main mailbox folders">
                   {/* create a list of errors with max shown errors 5 */}
                   <List>
@@ -185,12 +199,13 @@ function KwertyUI() {
                     <ListItem>
                       {error ? (
                         <Typography color="red">
-                          Something went wrong while calling the OpenAI API
+                          {errorMessage ? errorMessage : "Something went wrong while calling the OpenAI API"}
                         </Typography>
                       ) : (
                         <Button
                           variant="contained"
                           color="primary"
+                          disabled={isLoading || !inputText}
                           onClick={handleSubmit}
                         >
                           Fact Check
