@@ -11,7 +11,7 @@ import {CircularProgress, Textarea} from "@mui/joy";
 import RenderWord from "./RenderWord";
 
 // const KWERTY_API = process.env.REACT_APP_KWERTY_API || "http://localhost:3500"
-const KWERTY_API = "http://54.172.173.121:3500";
+const KWERTY_API = "https://u2vd4zftkk.execute-api.us-east-1.amazonaws.com/test/";
 
 let sampleData: KwertyValidation = { error: null, metric_match: null };
 function KwertyUI() {

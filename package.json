@@ -2,7 +2,7 @@
   "name": "kwerty-ui",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://54.172.173.121:3500",
+  "proxy": "https://u2vd4zftkk.execute-api.us-east-1.amazonaws.com/test/",
   "dependencies": {
     "@emotion/react": "latest",
     "@emotion/styled": "latest",
